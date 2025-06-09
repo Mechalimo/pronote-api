@@ -26,7 +26,7 @@ function start(host, port, handlers)
         try {
             // Bonne importation (sans destructuring)
             const pronote = require('../../index.js');
-            const session = await pronote.login(url, username, password, 'student'); // ou 'parent'
+            const session = await pronote.login(url, username, password, 'none'); // ou 'parent'
             if (session && session.user) {
                 return respond(res, 200, { success: true, name: session.user.name });
             } else {
