@@ -10,7 +10,8 @@ if (process.argv.length === 2 && process.argv[1] === '--help') {
 }
 
 // parseInt pour forcer un nombre
-const port = parseInt(process.env.PORT || process.argv[2] || '21727', 10);
+const port = parseInt(process.env.PORT, 10) || parseInt(process.argv[2], 10) || 21727;
+
 const host = '0.0.0.0';
 
 server(host, port).then(() => {
