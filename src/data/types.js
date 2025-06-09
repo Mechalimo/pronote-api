@@ -31,7 +31,7 @@ function parseRange(str)
     const result = [];
 
     for (const val of content) {
-        if (val.includes('..')) {
+        if (typeof val === 'string' && val.includes('..')) {
             const index = val.indexOf('..');
             for (let i = ~~val.substring(0, index); i <= ~~val.substring(index + 2); i++) {
                 result.push(i);
