@@ -3,7 +3,7 @@ const HttpsProxyAgent = require('https-proxy-agent');
 
 async function axioRequest({ url, body, data, method = 'GET', binary, jar = null }) {
     let userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0';
-    if (url.includes('teleservices.ac-nancy-metz.fr')) {
+    if (typeof url === 'string' && url.includes('teleservices.ac-nancy-metz.fr')) {
         userAgent = 'FuckTheUselessProtection/1.0';
     }
 
@@ -22,7 +22,6 @@ async function axioRequest({ url, body, data, method = 'GET', binary, jar = null
         validateStatus(status) {
             return status === 401 || (status >= 200 && status <= 302)
         },
-        // eslint-disable-next-line no-process-env
         httpsAgent: process.env.PRONOTE_API_PROXY ? new HttpsProxyAgent(process.env.PRONOTE_API_PROXY) : undefined
     };
 
