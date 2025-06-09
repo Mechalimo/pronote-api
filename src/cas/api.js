@@ -3,7 +3,6 @@ const { JSDOM } = require('jsdom');
 const errors = require('../errors');
 const http = require('../http');
 
-// eslint-disable-next-line max-len
 function submitForm({ dom, jar, asIs, runScripts, hook, method = 'POST', actionRoot, extraParams, followRedirects = true }) {
     let url = dom.window.document.getElementsByTagName('form')[0].action;
 
@@ -60,7 +59,7 @@ async function getDOM({ url, jar, method = 'GET', data = '', runScripts, hook, f
         return result;
     }
 
-    if (result.indexOf('<script>$(function() { startup() });</script>') !== -1)
+    if (typeof result === 'string' && result.indexOf('<script>$(function() { startup() });</script>') !== -1)
     {
         result = result
             .replace('<script>$(function() { startup() });</script>', '')
@@ -78,9 +77,11 @@ async function getDOM({ url, jar, method = 'GET', data = '', runScripts, hook, f
     });
 }
 
-
 function extractStart(html) {
-    if (html.includes('Votre adresse IP est provisoirement suspendue')) { // Top 10 anime betrayals
+    if (typeof html !== 'string') {
+        throw errors.WRONG_CREDENTIALS.drop();
+    }
+    if (html.includes('Votre adresse IP est provisoirement suspendue')) {
         throw errors.BANNED.drop();
     }
 
