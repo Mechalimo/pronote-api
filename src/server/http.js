@@ -1,4 +1,16 @@
 /* eslint no-console: off */
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    if (err.stack) {
+        console.error(err.stack);
+    }
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('UNHANDLED REJECTION:', reason);
+    if (reason && reason.stack) {
+        console.error(reason.stack);
+    }
+});
 
 const polka = require('polka');
 const body = require('body-parser');
