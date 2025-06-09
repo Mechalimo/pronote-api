@@ -50,7 +50,8 @@ async function find(url)
         return null;
     }
 
-    if (!location || typeof location !== 'string') {
+    // Correction stricte ici
+    if (typeof location !== 'string' || !location) {
         return 'none';
     }
 
@@ -81,5 +82,4 @@ async function find(url)
 
     return result;
 }
-
 module.exports = find;
