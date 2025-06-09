@@ -51,10 +51,7 @@ async function find(url)
         return null;
     }
 
-    // Ajoute ce log pour débugger
-    console.log('DEBUG location:', location, 'type:', typeof location);
-
-    // Protection maximale contre includes sur undefined, null, objet, etc.
+    // Vérification stricte AVANT tout .includes
     if (typeof location !== 'string' || !location) {
         return 'none';
     }
