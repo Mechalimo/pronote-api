@@ -47,11 +47,9 @@ async function find(url)
     try {
         location = await http({ url: url + 'eleve.html', followRedirects: 'get' });
     } catch (err) {
-        // En cas d'erreur réseau ou HTTP, on retourne null ou une valeur qui évite l'erreur d'usage
         return null;
     }
 
-    // Correction ici : on vérifie que location est bien une string avant d'appeler includes
     if (!location || typeof location !== 'string') {
         return 'none';
     }
