@@ -24,9 +24,9 @@ function start(host, port, handlers)
             return respond(res, 400, { error: 'url, username, and password are required' });
         }
         try {
-            // Correction : import local du module principal
-            const { default: pronote } = require('../../index.js');
-            const session = await pronote.login(url, username, password, 'student'); // ou 'parent'
+            const pronote = require('../../index.js');
+            // Utilise 'none' comme type de CAS pour la connexion Pronote classique
+            const session = await pronote.login(url, username, password, 'none');
             if (session && session.user) {
                 return respond(res, 200, { success: true, name: session.user.name });
             } else {
