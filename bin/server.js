@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-/* eslint no-console: off */
-
 const server = require('../src/server');
 
 if (process.argv.length === 2 && process.argv[1] === '--help') {
