@@ -1,4 +1,4 @@
-const http = require('./http');
+const http = require('../server/http');
 
 const URLS = {
     'ac-dijon': 'cas.eclat-bfc.fr',
