@@ -7,7 +7,7 @@ if (process.argv.length === 2 && process.argv[1] === '--help') {
     return;
 }
 
-const port = parseInt(process.env.PORT, 10) || parseInt(process.argv[2], 10) || 21727;
+const port = parseInt(process.env.PORT, 10) || 10000;
 const host = '0.0.0.0';
 
 console.log('DEBUG: Valeur de process.env.PORT =', process.env.PORT);
