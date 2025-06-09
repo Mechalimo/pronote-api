@@ -1,47 +1,82 @@
-const { graphql } = require('graphql');
+/* eslint no-console: off */
 
-const http = require('./http');
-const context = require('./context');
-const getSchemas = require('./schemas');
-const { login, logout, getSession } = require('./auth');
+const polka = require('polka');
+const body = require('body-parser');
 
-async function start(host, port)
+function start(host, port, handlers)
 {
-    const schemas = await getSchemas();
+    const server = polka();
+    server.use(body.json());
 
-    await http(host, port, {
-        graphql: ({ query, variables }, token) => handle(token, schemas, query, context, variables),
-        login: params => login(params),
-        logout: (_, token) => logout(token)
+    // Route GET / pour éviter le 404 sur la racine
+    server.get('/', (req, res) => {
+        res.end('API Pronote en ligne');
+    });
+
+    server.post('/auth/login', (req, res) => handle(req, res, handlers.login));
+    server.post('/auth/logout', (req, res) => handle(req, res, handlers.logout));
+    server.post('/graphql', (req, res) => handle(req, res, handlers.graphql));
+
+    // Route REST pour Flutter (login direct)
+    server.post('/login', async (req, res) => {
+        const { url, username, password } = req.body;
+        if (!url || !username || !password) {
+            return respond(res, 400, { error: 'url, username, and password are required' });
+        }
+        try {
+            // Bonne importation (sans destructuring)
+            const pronote = require('../../index.js');
+            const session = await pronote.login(url, username, password, 'student'); // ou 'parent'
+            if (session && session.user) {
+                return respond(res, 200, { success: true, name: session.user.name });
+            } else {
+                return respond(res, 401, { error: "Identifiants invalides ou accès refusé" });
+            }
+        } catch (err) {
+            return respond(res, 401, { error: err.message || "Erreur de connexion à Pronote" });
+        }
+    });
+
+    return new Promise((resolve, reject) => {
+        server.listen(port, host, err => {
+            if (err) {
+                return reject(err);
+            }
+
+            return resolve();
+        })
     });
 }
 
-async function handle(token, schemas, query, context, variables)
+function handle(req, res, handler)
 {
-    if (!token) {
-        throw {
-            http: 401,
-            message: 'Missing \'Token\' header'
-        };
-    }
+    handler(req.body, req.headers.token)
+        .then(result => respond(res, 200, result))
+        .catch(err => {
+            console.error('Error during request handling :');
+            console.error(err);
 
-    if (!query) {
-        throw {
-            http: 400,
-            message: 'Missing \'query\' field or \'Content-Type: application/json\' header'
-        };
-    }
+            if (err.message) {
+                delete err.http;
+                respond(res, err.http || 500, err);
+            } else {
+                respond(res, 500, {
+                    message: 'Internal error : ' + err
+                });
+            }
+        });
+}
 
-    const session = getSession(token);
-    if (!session) {
-        throw {
-            http: 401,
-            message: 'Unknown session token'
-        };
-    }
+function respond(res, code, obj)
+{
+    const data = JSON.stringify(obj);
+    const headers = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': Buffer.byteLength(data)
+    };
 
-    const schema = schemas[session.type.name];
-    return await graphql(schema, query, context(session), null, variables);
+    res.writeHead(code, headers);
+    res.end(data);
 }
 
 module.exports = start;
