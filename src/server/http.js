@@ -8,6 +8,11 @@ function start(host, port, handlers)
     const server = polka();
     server.use(body.json());
 
+    // Route GET / pour éviter le 404 sur la racine
+    server.get('/', (req, res) => {
+        res.end('API Pronote en ligne');
+    });
+
     server.post('/auth/login', (req, res) => handle(req, res, handlers.login));
     server.post('/auth/logout', (req, res) => handle(req, res, handlers.logout));
     server.post('/graphql', (req, res) => handle(req, res, handlers.graphql));
@@ -19,7 +24,8 @@ function start(host, port, handlers)
             return respond(res, 400, { error: 'url, username, and password are required' });
         }
         try {
-            const { default: pronote } = require('pronote-api');
+            // Correction : import local du module principal
+            const { default: pronote } = require('../../index.js');
             const session = await pronote.login(url, username, password, 'student'); // ou 'parent'
             if (session && session.user) {
                 return respond(res, 200, { success: true, name: session.user.name });
