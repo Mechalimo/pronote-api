@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-/* eslint no-console: off */
-
 const server = require('../src/server');
 
 if (process.argv.length === 2 && process.argv[1] === '--help') {
@@ -11,6 +9,9 @@ if (process.argv.length === 2 && process.argv[1] === '--help') {
 
 const port = parseInt(process.env.PORT, 10) || parseInt(process.argv[2], 10) || 21727;
 const host = '0.0.0.0';
+
+console.log('DEBUG: Valeur de process.env.PORT =', process.env.PORT);
+console.log('DEBUG: Port utilisé =', port);
 
 server(host, port).then(() => {
     console.log(`--> Listening on ${host}:${port}`);
