@@ -22,11 +22,22 @@ async function start(host, port)
 {
     const schemas = await getSchemas();
 
-    await http(host, port, {
-        graphql: ({ query, variables }, token) => handle(token, schemas, query, context, variables),
-        login: params => login(params),
-        logout: (_, token) => logout(token)
-    });
+    // Correction : http doit être une fonction (ancienne architecture)
+    // Si tu utilises Polka/Express, remplace tout ce bloc par http.listen(port, ...)
+    if (typeof http === 'function') {
+        await http(host, port, {
+            graphql: ({ query, variables }, token) => handle(token, schemas, query, context, variables),
+            login: params => login(params),
+            logout: (_, token) => logout(token)
+        });
+    } else if (http && typeof http.listen === 'function') {
+        // Version Polka/Express classique (host ignoré)
+        http.listen(port, () => {
+            console.log(`Serveur lancé sur le port ${port} !`);
+        });
+    } else {
+        throw new Error("Le module ./http n'est ni une fonction, ni un serveur compatible Express/Polka !");
+    }
 }
 
 async function handle(token, schemas, query, context, variables)
