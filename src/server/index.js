@@ -1,3 +1,16 @@
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    if (err.stack) {
+        console.error(err.stack);
+    }
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('UNHANDLED REJECTION:', reason);
+    if (reason && reason.stack) {
+        console.error(reason.stack);
+    }
+});
+
 const { graphql } = require('graphql');
 
 const http = require('./http');
