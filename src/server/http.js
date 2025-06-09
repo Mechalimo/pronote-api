@@ -12,6 +12,25 @@ function start(host, port, handlers)
     server.post('/auth/logout', (req, res) => handle(req, res, handlers.logout));
     server.post('/graphql', (req, res) => handle(req, res, handlers.graphql));
 
+    // Route REST pour Flutter (login direct)
+    server.post('/login', async (req, res) => {
+        const { url, username, password } = req.body;
+        if (!url || !username || !password) {
+            return respond(res, 400, { error: 'url, username, and password are required' });
+        }
+        try {
+            const { default: pronote } = require('pronote-api');
+            const session = await pronote.login(url, username, password, 'student'); // ou 'parent'
+            if (session && session.user) {
+                return respond(res, 200, { success: true, name: session.user.name });
+            } else {
+                return respond(res, 401, { error: "Identifiants invalides ou accès refusé" });
+            }
+        } catch (err) {
+            return respond(res, 401, { error: err.message || "Erreur de connexion à Pronote" });
+        }
+    });
+
     return new Promise((resolve, reject) => {
         server.listen(port, host, err => {
             if (err) {
