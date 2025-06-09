@@ -1,94 +1,49 @@
-/* eslint no-console: off */
-process.on('uncaughtException', (err) => {
-    console.error('UNCAUGHT EXCEPTION:', err);
-    if (err.stack) {
-        console.error(err.stack);
-    }
-});
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('UNHANDLED REJECTION:', reason);
-    if (reason && reason.stack) {
-        console.error(reason.stack);
-    }
-});
-
 const polka = require('polka');
-const body = require('body-parser');
+const body = require('body-parser'); // si tu utilises Polka, sinon 'express.json()' avec Express
+const { respond } = require('./helpers'); // adapte si ta logique de réponse est différente
 
-function start(host, port, handlers)
-{
-    const server = polka();
-    server.use(body.json());
+const server = polka();
 
-    // Route GET / pour éviter le 404 sur la racine
-    server.get('/', (req, res) => {
-        res.end('API Pronote en ligne');
-    });
+// Middleware pour parser le JSON
+server.use(body.json());
 
-    server.post('/auth/login', (req, res) => handle(req, res, handlers.login));
-    server.post('/auth/logout', (req, res) => handle(req, res, handlers.logout));
-    server.post('/graphql', (req, res) => handle(req, res, handlers.graphql));
+// Route de test (optionnel)
+server.get('/', (req, res) => {
+  respond(res, 200, { status: "API Pronote en ligne" });
+});
 
-    // Route REST pour Flutter (login direct)
-    server.post('/login', async (req, res) => {
-        const { url, username, password } = req.body;
-        if (!url || !username || !password) {
-            return respond(res, 400, { error: 'url, username, and password are required' });
-        }
-        try {
-            const pronote = require('../../index.js');
-            // Utilise 'none' comme type de CAS pour la connexion Pronote classique
-            const session = await pronote.login(url, username, password, 'none');
-            if (session && session.user) {
-                return respond(res, 200, { success: true, name: session.user.name });
-            } else {
-                return respond(res, 401, { error: "Identifiants invalides ou accès refusé" });
-            }
-        } catch (err) {
-            return respond(res, 401, { error: err.message || "Erreur de connexion à Pronote" });
-        }
-    });
+// Route /login
+server.post('/login', async (req, res) => {
+  // Log pour debug
+  console.log('POST /login body:', req.body);
 
-    return new Promise((resolve, reject) => {
-        server.listen(port, host, err => {
-            if (err) {
-                return reject(err);
-            }
+  // Déstructure avec fallback pour éviter les undefined
+  const { url, username, password } = req.body || {};
+  if (!url || !username || !password) {
+    return respond(res, 400, { error: 'url, username, and password are required' });
+  }
 
-            return resolve();
-        })
-    });
-}
+  // On tente la connexion Pronote
+  try {
+    const pronote = require('../../index.js'); // adapte le chemin si besoin
+    const session = await pronote.login(url, username, password, 'none');
+    console.log('Résultat login Pronote:', session);
 
-function handle(req, res, handler)
-{
-    handler(req.body, req.headers.token)
-        .then(result => respond(res, 200, result))
-        .catch(err => {
-            console.error('Error during request handling :');
-            console.error(err);
+    if (session && session.user) {
+      return respond(res, 200, {
+        success: true,
+        name: session.user.name,
+        // Ajoute d'autres infos utiles si besoin
+      });
+    } else {
+      return respond(res, 401, { error: "Identifiants invalides ou accès refusé" });
+    }
+  } catch (err) {
+    // Log de l'erreur backend pour debug
+    console.error('Erreur login Pronote:', err);
+    return respond(res, 401, { error: err.message || "Erreur de connexion à Pronote" });
+  }
+});
 
-            if (err.message) {
-                delete err.http;
-                respond(res, err.http || 500, err);
-            } else {
-                respond(res, 500, {
-                    message: 'Internal error : ' + err
-                });
-            }
-        });
-}
-
-function respond(res, code, obj)
-{
-    const data = JSON.stringify(obj);
-    const headers = {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Content-Length': Buffer.byteLength(data)
-    };
-
-    res.writeHead(code, headers);
-    res.end(data);
-}
-
-module.exports = start;
+// Exporte pour bin/server.js
+module.exports = server;
