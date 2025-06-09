@@ -47,10 +47,14 @@ async function find(url)
     try {
         location = await http({ url: url + 'eleve.html', followRedirects: 'get' });
     } catch (err) {
+        console.error('Erreur dans http:', err);
         return null;
     }
 
-    // Correction stricte ici
+    // Ajoute ce log pour débugger
+    console.log('DEBUG location:', location, 'type:', typeof location);
+
+    // Protection maximale contre includes sur undefined, null, objet, etc.
     if (typeof location !== 'string' || !location) {
         return 'none';
     }
@@ -82,4 +86,5 @@ async function find(url)
 
     return result;
 }
+
 module.exports = find;
